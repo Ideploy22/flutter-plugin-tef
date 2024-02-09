@@ -1,0 +1,5 @@
+rootProject.name = 'flutter_plugin_tef_integration'
+include ':modules:elgin-core'
+include ':modules:elgin-destaxa'
+include ':modules:elgin-payments'
+include ':modules:elgin-ppcomp'
