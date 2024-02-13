@@ -14,7 +14,7 @@ dependencies:
   ideploy_package:
     git:
       url: git@github.com:Ideploy22/flutter-lib-common-packages.git
-      ref: 1.1.0
+      ref: 1.2.0
 
   plugin_platform_interface: ^2.1.8
 

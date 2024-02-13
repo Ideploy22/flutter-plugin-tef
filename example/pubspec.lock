@@ -330,9 +330,11 @@ packages:
   ideploy_package:
     dependency: transitive
     description:
-      path: "../../ideploy_package"
-      relative: true
-    source: path
+      path: "."
+      ref: "1.2.0"
+      resolved-ref: c96459adf9d95e060e4e79464e7b73074bab8940
+      url: "git@github.com:Ideploy22/flutter-lib-common-packages.git"
+    source: git
     version: "0.0.1"
   injectable:
     dependency: transitive
@@ -709,4 +711,4 @@ packages:
     version: "3.1.2"
 sdks:
   dart: ">=3.2.0 <4.0.0"
-  flutter: ">=3.16.0"
+  flutter: ">=3.16.9"
