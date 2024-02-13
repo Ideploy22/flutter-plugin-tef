@@ -5,17 +5,16 @@ publish_to: none
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
-  flutter: ">=3.10.0"
+  flutter: "3.16.9"
 
 dependencies:
   flutter:
     sdk: flutter
 
   ideploy_package:
-    path: ./../ideploy_package
-#    git:
-#      url: git@github.com:Ideploy22/flutter-lib-common-packages.git
-#      ref: 1.1.0
+    git:
+      url: git@github.com:Ideploy22/flutter-lib-common-packages.git
+      ref: 1.1.0
 
   plugin_platform_interface: ^2.1.8
 
