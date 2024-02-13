@@ -35,10 +35,33 @@ class PaymentDataEntity {
 
   String toRequest() {
     return jsonEncode({
-      'paymentType': paymentType,
+      'paymentType': paymentType.name,
       'value': _getParsedRequestValue(),
-      'operationType': operationType?.name,
+      'operationType': operationType?.value,
       'installments': installments,
     });
   }
+
+  factory PaymentDataEntity.credit({
+    required int valueCents,
+    int installments = 1,
+    OperationType? operationType,
+  }) =>
+      PaymentDataEntity(
+        paymentType: PaymentType.credit,
+        valueCents: valueCents,
+        installments: installments,
+        operationType: operationType,
+      );
+
+  factory PaymentDataEntity.pix({required int valueCents}) => PaymentDataEntity(
+        paymentType: PaymentType.pix,
+        valueCents: valueCents,
+      );
+
+  factory PaymentDataEntity.debit({required int valueCents}) =>
+      PaymentDataEntity(
+        paymentType: PaymentType.debit,
+        valueCents: valueCents,
+      );
 }

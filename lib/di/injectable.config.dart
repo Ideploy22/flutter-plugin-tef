@@ -16,9 +16,10 @@ import '../data/data_source/tef_data_source.dart' as _i3;
 import '../data/data_source/tef_data_source_impl.dart' as _i4;
 import '../data/repository/tef_repository.dart' as _i7;
 import '../domain/repository/tef_repository.dart' as _i6;
-import '../domain/use_case/get_configuration.dart' as _i8;
-import '../domain/use_case/save_configuration.dart' as _i9;
-import '../presentation/controller/tef_controller.dart' as _i10;
+import '../domain/use_case/configuration/get_configuration.dart' as _i8;
+import '../domain/use_case/configuration/save_configuration.dart' as _i10;
+import '../domain/use_case/payment/payment_response_from_string.dart' as _i9;
+import '../presentation/controller/tef_controller.dart' as _i11;
 
 // initializes the registration of main-scope dependencies inside of GetIt
 _i1.GetIt $initGetIt(
@@ -37,11 +38,16 @@ _i1.GetIt $initGetIt(
       () => _i7.TefRepositoryImpl(dataSource: gh<_i3.TefDataSource>()));
   gh.factory<_i8.GetConfigurationUseCase>(
       () => _i8.GetConfigurationUseCase(repository: gh<_i6.TefRepository>()));
-  gh.factory<_i9.SaveConfigurationUseCase>(
-      () => _i9.SaveConfigurationUseCase(repository: gh<_i6.TefRepository>()));
-  gh.lazySingleton<_i10.TefController>(() => _i10.TefController(
+  gh.factory<_i9.GetPaymentResponseFromStringUseCase>(() =>
+      _i9.GetPaymentResponseFromStringUseCase(
+          repository: gh<_i6.TefRepository>()));
+  gh.factory<_i10.SaveConfigurationUseCase>(
+      () => _i10.SaveConfigurationUseCase(repository: gh<_i6.TefRepository>()));
+  gh.lazySingleton<_i11.TefController>(() => _i11.TefController(
         getConfigurationUseCase: gh<_i8.GetConfigurationUseCase>(),
-        saveConfigurationUseCase: gh<_i9.SaveConfigurationUseCase>(),
+        saveConfigurationUseCase: gh<_i10.SaveConfigurationUseCase>(),
+        getPaymentResponseFromStringUseCase:
+            gh<_i9.GetPaymentResponseFromStringUseCase>(),
       ));
   return getIt;
 }

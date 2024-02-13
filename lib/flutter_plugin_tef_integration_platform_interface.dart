@@ -1,6 +1,9 @@
-import 'package:flutter_plugin_tef_integration/domain/entities/configure_tef_entity.dart';
-import 'package:flutter_plugin_tef_integration/domain/entities/configure_tef_response.dart';
-import 'package:flutter_plugin_tef_integration/domain/entities/payment_data_entity.dart';
+import 'package:flutter_plugin_tef_integration/domain/entities/common/tef_response.dart';
+import 'package:flutter_plugin_tef_integration/domain/entities/configure/configure_tef_entity.dart';
+import 'package:flutter_plugin_tef_integration/domain/entities/payment/payment_data_entity.dart';
+import 'package:flutter_plugin_tef_integration/domain/entities/payment/tef_payment_response.dart';
+import 'package:ideploy_package/domain/entities/either_of/either_of.dart';
+import 'package:ideploy_package/domain/entities/failure/failure.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'flutter_plugin_tef_integration_method_channel.dart';
@@ -20,8 +23,12 @@ abstract class FlutterPluginTefIntegrationPlatform extends PlatformInterface {
     _instance = instance;
   }
 
-  Stream<ConfigureTEFResponse> get configureStream => throw UnimplementedError(
+  Stream<TEFResponseEntity> get configureStream => throw UnimplementedError(
       'configure stream response has not been implemented.');
+
+  Stream<TEFPaymentResponseEntity> get paymentStream =>
+      throw UnimplementedError(
+          'payment stream response has not been implemented.');
 
   Future<String?> getPlatformVersion() {
     throw UnimplementedError('platformVersion() has not been implemented.');
@@ -31,7 +38,7 @@ abstract class FlutterPluginTefIntegrationPlatform extends PlatformInterface {
     throw UnimplementedError('platformVersion() has not been implemented.');
   }
 
-  Future<void> configure(ConfigureTEFEntity params) {
+  Future<EitherOf<Failure, VoidSuccess>> configure(ConfigureTEFEntity params) {
     throw UnimplementedError('initialize() has not been implemented.');
   }
 

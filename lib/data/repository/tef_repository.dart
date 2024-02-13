@@ -1,5 +1,6 @@
 import 'package:flutter_plugin_tef_integration/data/data_source/tef_data_source.dart';
-import 'package:flutter_plugin_tef_integration/domain/entities/configure_tef_entity.dart';
+import 'package:flutter_plugin_tef_integration/domain/entities/configure/configure_tef_entity.dart';
+import 'package:flutter_plugin_tef_integration/domain/entities/payment/payment_response.dart';
 import 'package:flutter_plugin_tef_integration/domain/repository/tef_repository.dart';
 import 'package:ideploy_package/ideploy_package.dart';
 
@@ -13,7 +14,8 @@ class TefRepositoryImpl implements TefRepository {
   @override
   Future<EitherOf<Failure, ConfigureTEFEntity?>> getConfigurationData() async {
     try {
-      final credentials = await _dataSource.getConfigurations();
+      final ConfigureTEFEntity? credentials =
+          await _dataSource.getConfigurations();
       return resolve(credentials);
     } catch (error) {
       return reject(TefFailure());
@@ -26,6 +28,16 @@ class TefRepositoryImpl implements TefRepository {
     try {
       await _dataSource.saveCredentials(data);
       return resolve(voidSuccess);
+    } catch (error) {
+      return reject(PosFailure());
+    }
+  }
+
+  @override
+  EitherOf<Failure, PaymentResponseEntity> getPaymentResponseFromString(
+      String data) {
+    try {
+      return resolve(_dataSource.getPaymentResponseFromString(data));
     } catch (error) {
       return reject(PosFailure());
     }

@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter_plugin_tef_integration/data/data_source/tef_data_source.dart';
-import 'package:flutter_plugin_tef_integration/data/model/configure_tef_model.dart';
-import 'package:flutter_plugin_tef_integration/domain/entities/configure_tef_entity.dart';
+import 'package:flutter_plugin_tef_integration/data/model/configure/configure_tef_model.dart';
+import 'package:flutter_plugin_tef_integration/data/model/payment/payment_response_model.dart';
+import 'package:flutter_plugin_tef_integration/domain/entities/configure/configure_tef_entity.dart';
+import 'package:flutter_plugin_tef_integration/domain/entities/payment/payment_response.dart';
 import 'package:ideploy_package/ideploy_package.dart';
 
 @Injectable(as: TefDataSource)
@@ -38,6 +42,16 @@ class TefDataSourceImpl implements TefDataSource {
       final credentialModel = ConfigureTEFModel.fromEntity(data);
       await Hive.box('pos_integration_box')
           .put('configuration', credentialModel.toJson());
+    } catch (error) {
+      rethrow;
+    }
+  }
+
+  @override
+  PaymentResponseEntity getPaymentResponseFromString(String data) {
+    try {
+      final Map<String, dynamic> json = jsonDecode(data);
+      return PaymentResponseModel.fromJson(json).toEntity();
     } catch (error) {
       rethrow;
     }

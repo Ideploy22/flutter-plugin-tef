@@ -1,29 +1,44 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter_plugin_tef_integration/domain/entities/configure_tef_entity.dart';
-import 'package:flutter_plugin_tef_integration/domain/entities/configure_tef_response.dart';
-import 'package:flutter_plugin_tef_integration/domain/entities/constants.dart';
-import 'package:flutter_plugin_tef_integration/domain/entities/tef_global_response.dart';
-import 'package:flutter_plugin_tef_integration/domain/use_case/get_configuration.dart';
-import 'package:flutter_plugin_tef_integration/domain/use_case/save_configuration.dart';
+import 'package:flutter_plugin_tef_integration/domain/entities/common/constants.dart';
+import 'package:flutter_plugin_tef_integration/domain/entities/common/tef_response.dart';
+import 'package:flutter_plugin_tef_integration/domain/entities/configure/configure_tef_entity.dart';
+import 'package:flutter_plugin_tef_integration/domain/entities/payment/payment_response.dart';
+import 'package:flutter_plugin_tef_integration/domain/entities/payment/tef_payment_response.dart';
+import 'package:flutter_plugin_tef_integration/domain/use_case/configuration/get_configuration.dart';
+import 'package:flutter_plugin_tef_integration/domain/use_case/configuration/save_configuration.dart';
+import 'package:flutter_plugin_tef_integration/domain/use_case/payment/payment_response_from_string.dart';
 import 'package:ideploy_package/ideploy_package.dart';
 
 @lazySingleton
 class TefController {
   final GetConfigurationUseCase _getConfigurationUseCase;
   final SaveConfigurationUseCase _saveConfigurationUseCase;
+  final GetPaymentResponseFromStringUseCase
+      _getPaymentResponseFromStringUseCase;
 
   TefController({
     required GetConfigurationUseCase getConfigurationUseCase,
     required SaveConfigurationUseCase saveConfigurationUseCase,
+    required GetPaymentResponseFromStringUseCase
+        getPaymentResponseFromStringUseCase,
   })  : _getConfigurationUseCase = getConfigurationUseCase,
-        _saveConfigurationUseCase = saveConfigurationUseCase;
+        _saveConfigurationUseCase = saveConfigurationUseCase,
+        _getPaymentResponseFromStringUseCase =
+            getPaymentResponseFromStringUseCase;
 
-  final StreamController<ConfigureTEFResponse> _configurationStreamController =
-      StreamController<ConfigureTEFResponse>.broadcast();
-  Stream<ConfigureTEFResponse> get configureStream =>
+  final StreamController<TEFResponseEntity> _configurationStreamController =
+      StreamController<TEFResponseEntity>.broadcast();
+
+  Stream<TEFResponseEntity> get configureStream =>
       _configurationStreamController.stream;
+
+  final StreamController<TEFPaymentResponseEntity> _paymentStreamController =
+      StreamController<TEFPaymentResponseEntity>.broadcast();
+
+  Stream<TEFPaymentResponseEntity> get paymentStream =>
+      _paymentStreamController.stream;
 
   Future<ConfigureTEFEntity?> getConfigurationData() async {
     final EitherOf<Failure, ConfigureTEFEntity?> response =
@@ -31,17 +46,50 @@ class TefController {
     return response.get((_) => null, (ConfigureTEFEntity? data) => data);
   }
 
+  Future<void> saveConfigData(ConfigureTEFEntity data) async {
+    final EitherOf<Failure, VoidSuccess> response =
+        await _saveConfigurationUseCase.call(data);
+    return response.get((_) => throw TefFailure(), (_) => null);
+  }
+
   void _handleConfigureEvents(Map<String, dynamic> json) {
-    final ConfigureTEFResponse response = ConfigureTEFResponse(
+    final TEFResponseEntity response = TEFResponseEntity(
       type: TefResponseType.values.firstWhere(
         (TefResponseType element) => element.what == json['what'],
         orElse: () => TefResponseType.unknown,
       ),
-      message: (json['message'] ?? '').split(' - ')[0],
+      message: json['message'] ?? '',
     );
 
-    print('[RESPONSE]: ${response.type} - ${response.message}');
     _configurationStreamController.add(response);
+  }
+
+  void _handlePaymentEvents(Map<String, dynamic> json) {
+    final TefResponseType type = TefResponseType.values.firstWhere(
+      (TefResponseType element) => element.what == json['what'],
+      orElse: () => TefResponseType.unknown,
+    );
+
+    late final TEFPaymentResponseEntity response;
+    if (type != TefResponseType.finish) {
+      response = TEFPaymentResponseEntity(
+        type: type,
+        message: json['message'] ?? '',
+      );
+    } else {
+      final EitherOf<Failure, PaymentResponseEntity> paymentReceiptResponse =
+          _getPaymentResponseFromStringUseCase.call(json['message']);
+      paymentReceiptResponse.get((Failure reject) => null,
+          (PaymentResponseEntity receipt) {
+        response = TEFPaymentResponseEntity(
+          type: type,
+          message: receipt.message,
+          receipt: receipt,
+        );
+      });
+    }
+
+    _paymentStreamController.add(response);
   }
 
   Future<void> handleEvent(String event) async {
@@ -52,6 +100,7 @@ class TefController {
 
     final Map<TEFEvent, Function()> callToAction = <TEFEvent, Function()>{
       TEFEvent.configure: () => _handleConfigureEvents(json['data']),
+      TEFEvent.pay: () => _handlePaymentEvents(json['data']),
     };
 
     if (callToAction[tefEvent] != null) {

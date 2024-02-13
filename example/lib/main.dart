@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_plugin_tef_integration/domain/entities/configure_tef_entity.dart';
-import 'package:flutter_plugin_tef_integration/domain/entities/configure_tef_response.dart';
+import 'package:flutter_plugin_tef_integration/domain/entities/common/tef_response.dart';
+import 'package:flutter_plugin_tef_integration/domain/entities/configure/configure_tef_entity.dart';
+import 'package:flutter_plugin_tef_integration/domain/entities/payment/payment_data_entity.dart';
+import 'package:flutter_plugin_tef_integration/domain/entities/payment/tef_payment_response.dart';
 import 'package:flutter_plugin_tef_integration/flutter_plugin_tef_integration.dart';
 
 void main() {
@@ -21,15 +23,17 @@ class _MyAppState extends State<MyApp> {
   String _platformVersion = 'Unknown';
   final _tefPlugin = FlutterPluginTefIntegration();
 
-  StreamSubscription<ConfigureTEFResponse>? configSubs;
-  List<ConfigureTEFResponse> configResponses = [];
+  StreamSubscription<TEFResponseEntity>? configSubs;
+  List<TEFResponseEntity> configResponses = [];
+  List<TEFPaymentResponseEntity> paymentResponses = [];
 
   @override
   void initState() {
     super.initState();
     initializeTef();
     initPlatformState();
-    listenConfigData();
+    listenConfiguration();
+    listenPayment();
   }
 
   @override
@@ -76,18 +80,50 @@ class _MyAppState extends State<MyApp> {
                   onPressed: () => _onPressed(),
                   child: const Text('Configure'),
                 ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () => _payWithCredit(),
+                      child: const Text('Credit'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () => _payWithDebit(),
+                      child: const Text('Debit'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () => _payWithPIX(),
+                      child: const Text('PIX'),
+                    ),
+                  ],
+                ),
                 ElevatedButton(
                   onPressed: () => _clearMessages(),
                   child: const Text('Clear Messages'),
                 ),
-                Expanded(
-                  child: ListView(
-                    children: configResponses
-                        .map((entry) =>
-                            Text('${entry.type.name} - ${entry.message}'))
-                        .toList(),
-                  ),
-                )
+                configResponses.isNotEmpty
+                    ? Expanded(
+                        child: ListView(
+                          children: configResponses
+                              .map((entry) =>
+                                  Text('${entry.type.name} - ${entry.message}'))
+                              .toList(),
+                        ),
+                      )
+                    : const SizedBox(),
+                paymentResponses.isNotEmpty
+                    ? Expanded(
+                        child: ListView(
+                          children: paymentResponses
+                              .map(
+                                (entry) => Text(
+                                  '${entry.type.name} - ${entry.message} ${entry.receipt != null ? '${entry.receipt?.authorization}' : ''}',
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      )
+                    : const SizedBox(),
               ],
             ),
           ),
@@ -102,7 +138,7 @@ class _MyAppState extends State<MyApp> {
         applicationName: 'App test',
         applicationVersion: '101',
         document: '49.984.096/0002-69',
-        pinPadText: 'Flutter TEF',
+        pinPadText: 'Bistro TEF',
       ),
     );
   }
@@ -111,7 +147,35 @@ class _MyAppState extends State<MyApp> {
     await _tefPlugin.initialize();
   }
 
-  void listenConfigData() {
+  _clearMessages() {
+    setState(() {
+      configResponses = [];
+      paymentResponses = [];
+    });
+  }
+
+  void _payWithCredit() {
+    _tefPlugin.pay(
+      PaymentDataEntity.credit(
+        valueCents: 10,
+        operationType: OperationType.inCash,
+      ),
+    );
+  }
+
+  void _payWithDebit() {
+    _tefPlugin.pay(
+      PaymentDataEntity.debit(valueCents: 10),
+    );
+  }
+
+  void _payWithPIX() {
+    _tefPlugin.pay(
+      PaymentDataEntity.pix(valueCents: 10),
+    );
+  }
+
+  void listenConfiguration() {
     _tefPlugin.configureStream.listen((event) {
       setState(() {
         configResponses = [...configResponses, event];
@@ -119,9 +183,11 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  _clearMessages() {
-    setState(() {
-      configResponses = [];
+  void listenPayment() {
+    _tefPlugin.paymentStream.listen((event) {
+      setState(() {
+        paymentResponses = [...paymentResponses, event];
+      });
     });
   }
 }

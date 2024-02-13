@@ -17,6 +17,32 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import org.json.JSONObject
 
+enum class TefOperation(val value: String) {
+    CONFIGURE("configure"),
+    PAY("pay"),
+    UNKNOWN("")
+}
+
+enum class CreditCardOperation(val value: String) {
+    CREDIT("credit"),
+    DEBIT("debit"),
+    PIX("pix"),
+    UNKNOWN("");
+
+    companion object {
+        fun fromString(value: String): CreditCardOperation {
+            return values().find { it.value == value } ?: UNKNOWN
+        }
+    }
+}
+
+
+enum class TefWhat(val value: Int) {
+    PROGRESS(1),
+    COLLECT(2),
+    TRANSACTION(3),
+    FINISH(4),
+}
 
 class FlutterPluginTefIntegrationPlugin : FlutterPlugin, ActivityAware {
     private val nameSpace = "br.ideploy.tef.integration.flutter_plugin_tef_integration"
@@ -29,9 +55,9 @@ class FlutterPluginTefIntegrationPlugin : FlutterPlugin, ActivityAware {
     private var activity: Activity? = null
     private var binaryMessenger: BinaryMessenger? = null
 
-    private var operation: String = "";
+    private var operation: TefOperation = TefOperation.UNKNOWN
 
-    private  fun setOperation(op: String) {
+    private fun setOperation(op: TefOperation) {
         operation = op
     }
 
@@ -43,32 +69,28 @@ class FlutterPluginTefIntegrationPlugin : FlutterPlugin, ActivityAware {
                 var value: String? = null
                 try {
                     when (message.what) {
-                        1 -> { // MENSAGEM DE PROGRESSO
+                        TefWhat.PROGRESS.value -> {
                             value = ElginTef.ObterMensagemProgresso()
                         }
-                        2 -> { // OPÇÃO DE COLETA
+                        TefWhat.COLLECT.value -> {
                             value = ElginTef.ObterOpcaoColeta()
                         }
-                        3 -> { // DADOS DA TRANSAÇÃO
-                            value = ElginTef.ObterDadosTransacao()
-                        }
-                        4 -> { // FINALIZAR
+                        TefWhat.TRANSACTION.value -> {
                             value = ElginTef.ObterMensagemProgresso()
                         }
-                        else -> {
+                        TefWhat.FINISH.value -> {
+                            value = if (operation == TefOperation.CONFIGURE) {
+                                "${message.obj}"
+                            } else {
+                                ElginTef.ObterDadosTransacao()
+                            }
                         }
                     }
 
-                    Log.d(
-                        tag,
-                        "MESSAGE: $value - What: ${message.what} - When: ${message.`when`} - Obj: ${message.obj}"
-                    )
-
-                    val response = makeSuccessResponse(operation, JSONObject().apply {
+                    invokeMethodUIThread(makeSuccessResponse(operation.value, JSONObject().apply {
                         put("what", message.what)
-                        put("message", "${message.obj}")
-                    })
-                    invokeMethodUIThread(response)
+                        put("message", value ?: "${message.obj}")
+                    }))
                 } catch (e: java.lang.Exception) {
                     Log.d(tag, e.toString())
                 }
@@ -92,32 +114,59 @@ class FlutterPluginTefIntegrationPlugin : FlutterPlugin, ActivityAware {
         return response
     }
 
-    private fun configureTEF(data: String?) {
-        var applicationName: String? = null
-        var applicationVersion: String? = null
-        var pinPadText: String? = null
-        var document: String? = null
-        if (data != null) {
-            val jsonObject = JSONObject(data)
-            applicationName = (jsonObject["applicationName"] as String)
-            applicationVersion = (jsonObject["applicationVersion"] as String)
-            pinPadText = (jsonObject["pinPadText"] as String)
-            document = (jsonObject["document"] as String)
-        }
-
+    private fun initializeTEF() {
         activity?.let { validContext ->
             ElginTef.setContext(validContext)
             handler?.let { validHandler ->
                 ElginTef.setHandler(validHandler)
-                ElginTef.InformarDadosAutomacao(
-                    applicationName,
-                    applicationVersion,
-                    pinPadText,
-                    "ELGIN",
-                    "Loja172",
-                    "T1720010"
-                )
-                ElginTef.AtivarTerminal(document)
+            }
+        }
+    }
+
+    private fun configureTEF(data: String?) {
+        if (data != null) {
+            val jsonObject = JSONObject(data)
+            val applicationName: String = (jsonObject["applicationName"] as String)
+            val applicationVersion: String = (jsonObject["applicationVersion"] as String)
+            val pinPadText: String = (jsonObject["pinPadText"] as String)
+            val document: String = (jsonObject["document"] as String)
+
+            ElginTef.InformarDadosAutomacao(
+                applicationName,
+                applicationVersion,
+                pinPadText,
+                "",
+                "",
+                ""
+            )
+            ElginTef.AtivarTerminal(document)
+        }
+    }
+
+    private fun pay(data: String?) {
+        if (data != null) {
+            val jsonObject = JSONObject(data)
+            val paymentType: CreditCardOperation = CreditCardOperation.fromString(jsonObject["paymentType"] as String)
+            val value: String = jsonObject["value"] as String
+
+            when (paymentType) {
+                CreditCardOperation.CREDIT -> {
+                    val operationType: String? = jsonObject["operationType"] as String?
+                    val installments: Int? = jsonObject["installments"] as Int?
+
+                    ElginTef.RealizarTransacaoCredito(
+                        value,
+                        operationType,
+                        (installments ?: 1).toString()
+                    )
+                }
+                CreditCardOperation.DEBIT -> {
+                    ElginTef.RealizarTransacaoDebito(value)
+                }
+                CreditCardOperation.PIX -> {
+                    ElginTef.RealizarTransacaoPIX(value)
+                }
+                CreditCardOperation.UNKNOWN -> TODO()
             }
         }
     }
@@ -127,17 +176,40 @@ class FlutterPluginTefIntegrationPlugin : FlutterPlugin, ActivityAware {
             "getPlatformVersion" -> {
                 result.success("Android ${android.os.Build.VERSION.RELEASE}")
             }
+            "initialize" -> {
+                try {
+                    initializeTEF()
+                    result.success(makeSuccessResponse("configure", JSONObject().apply {
+                        put("success", true)
+                    }).toString())
+                } catch (e: Exception) {
+                    result.error("configure", e.message, null)
+                }
+            }
             "configure" -> {
                 try {
                     val args = call.arguments() as String?
                     val response = makeSuccessResponse("configure", JSONObject().apply {
                         put("start", args != null)
                     })
-                    setOperation("configure")
+                    setOperation(TefOperation.CONFIGURE)
                     configureTEF(args)
                     result.success(response.toString())
                 } catch (e: Exception) {
                     result.error("configure", e.message, null)
+                }
+            }
+            "pay" -> {
+                try {
+                    val args = call.arguments() as String?
+                    val response = makeSuccessResponse("pay", JSONObject().apply {
+                        put("start", args != null)
+                    })
+                    setOperation(TefOperation.PAY)
+                    pay(args)
+                    result.success(response.toString())
+                } catch (e: Exception) {
+                    result.error("pay", e.message, null)
                 }
             }
             else -> {

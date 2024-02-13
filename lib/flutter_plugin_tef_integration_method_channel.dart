@@ -1,13 +1,16 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_plugin_tef_integration/di/injectable.dart';
-import 'package:flutter_plugin_tef_integration/domain/entities/configure_tef_entity.dart';
-import 'package:flutter_plugin_tef_integration/domain/entities/configure_tef_response.dart';
-import 'package:flutter_plugin_tef_integration/domain/entities/payment_data_entity.dart';
+import 'package:flutter_plugin_tef_integration/domain/entities/common/tef_response.dart';
+import 'package:flutter_plugin_tef_integration/domain/entities/configure/configure_tef_entity.dart';
+import 'package:flutter_plugin_tef_integration/domain/entities/payment/payment_data_entity.dart';
+import 'package:flutter_plugin_tef_integration/domain/entities/payment/tef_payment_response.dart';
 import 'package:flutter_plugin_tef_integration/presentation/controller/tef_controller.dart';
+import 'package:ideploy_package/domain/entities/either_of/either_of.dart';
+import 'package:ideploy_package/domain/entities/failure/failure.dart';
 
 import 'di/injectable.dart' as di;
-import 'domain/entities/constants.dart';
+import 'domain/entities/common/constants.dart';
 import 'flutter_plugin_tef_integration_platform_interface.dart';
 
 class MethodChannelFlutterPluginTefIntegration
@@ -37,10 +40,6 @@ class MethodChannelFlutterPluginTefIntegration
 
   void _mapEventToState(dynamic data) {
     if (data.runtimeType == String) {
-      print('***************************');
-      print(data);
-      print('***************************\n\n');
-
       _initializeLocatorIfNeeded();
       final TefController posController = locator<TefController>();
       posController.handleEvent(data);
@@ -50,15 +49,23 @@ class MethodChannelFlutterPluginTefIntegration
   @override
   Future<void> initialize() async {
     _initializeLocatorIfNeeded();
+    await methodChannel.invokeMethod<String>('initialize');
     eventChannel
         .receiveBroadcastStream()
         .listen((dynamic event) => _mapEventToState(event));
   }
 
   @override
-  Future<void> configure(ConfigureTEFEntity params) async {
-    _initializeLocatorIfNeeded();
-    await methodChannel.invokeMethod<String>('configure', params.toRequest());
+  Future<EitherOf<Failure, VoidSuccess>> configure(
+      ConfigureTEFEntity params) async {
+    try {
+      _initializeLocatorIfNeeded();
+      await locator<TefController>().saveConfigData(params);
+      await methodChannel.invokeMethod<String>('configure', params.toRequest());
+      return resolve(voidSuccess);
+    } catch (_) {
+      return reject(TefFailure());
+    }
   }
 
   @override
@@ -67,8 +74,14 @@ class MethodChannelFlutterPluginTefIntegration
   }
 
   @override
-  Stream<ConfigureTEFResponse> get configureStream {
+  Stream<TEFResponseEntity> get configureStream {
     _initializeLocatorIfNeeded();
     return locator<TefController>().configureStream;
+  }
+
+  @override
+  Stream<TEFPaymentResponseEntity> get paymentStream {
+    _initializeLocatorIfNeeded();
+    return locator<TefController>().paymentStream;
   }
 }
