@@ -32,6 +32,10 @@ class MockFlutterPluginTefIntegrationPlatform
   @override
   Stream<TEFPaymentResponseEntity> get paymentStream =>
       throw UnimplementedError();
+
+  @override
+  Future<EitherOf<Failure, ConfigureTEFEntity?>> getConfigurationData() =>
+      throw UnimplementedError();
 }
 
 void main() {

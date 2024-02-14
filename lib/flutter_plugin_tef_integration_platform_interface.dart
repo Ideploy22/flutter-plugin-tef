@@ -35,14 +35,19 @@ abstract class FlutterPluginTefIntegrationPlatform extends PlatformInterface {
   }
 
   Future<void> initialize() {
-    throw UnimplementedError('platformVersion() has not been implemented.');
+    throw UnimplementedError('initialize() has not been implemented.');
   }
 
   Future<EitherOf<Failure, VoidSuccess>> configure(ConfigureTEFEntity params) {
-    throw UnimplementedError('initialize() has not been implemented.');
+    throw UnimplementedError('configure() has not been implemented.');
+  }
+
+  Future<EitherOf<Failure, ConfigureTEFEntity?>> getConfigurationData() {
+    throw UnimplementedError(
+        'getConfigurationData() has not been implemented.');
   }
 
   Future<void> pay(PaymentDataEntity data) {
-    throw UnimplementedError('initialize() has not been implemented.');
+    throw UnimplementedError('pay() has not been implemented.');
   }
 }

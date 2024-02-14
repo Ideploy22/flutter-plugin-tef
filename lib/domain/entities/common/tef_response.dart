@@ -22,4 +22,9 @@ class TEFResponseEntity {
 
   bool get doneWithSuccess =>
       type == TefResponseType.done && !message.contains('CANCELADA');
+
+  bool get done => type == TefResponseType.done;
+
+  bool get processing =>
+      type != TefResponseType.done && type != TefResponseType.finish;
 }

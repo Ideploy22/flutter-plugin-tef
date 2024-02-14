@@ -69,6 +69,18 @@ class MethodChannelFlutterPluginTefIntegration
   }
 
   @override
+  Future<EitherOf<Failure, ConfigureTEFEntity?>> getConfigurationData() async {
+    try {
+      _initializeLocatorIfNeeded();
+      final ConfigureTEFEntity? data =
+          await locator<TefController>().getConfigurationData();
+      return resolve(data);
+    } catch (_) {
+      return reject(TefFailure());
+    }
+  }
+
+  @override
   Future<void> pay(PaymentDataEntity data) async {
     await methodChannel.invokeMethod<String>('pay', data.toRequest());
   }
