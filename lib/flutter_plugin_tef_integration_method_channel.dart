@@ -25,7 +25,7 @@ class MethodChannelFlutterPluginTefIntegration
     '${TefConstants.nameSpace.value}/${TefConstants.eventChannelId.value}',
   );
 
-  void _initializeLocatorIfNeeded() async {
+  void _initializeLocatorIfNeeded() {
     if (!locator.isRegistered<TefController>()) {
       di.init();
     }
@@ -33,13 +33,16 @@ class MethodChannelFlutterPluginTefIntegration
 
   @override
   Future<String?> getPlatformVersion() async {
-    final version =
+    final String? version =
         await methodChannel.invokeMethod<String>('getPlatformVersion');
     return version;
   }
 
   void _mapEventToState(dynamic data) {
     if (data.runtimeType == String) {
+      print('***********');
+      print(data);
+      print('***********');
       _initializeLocatorIfNeeded();
       final TefController posController = locator<TefController>();
       posController.handleEvent(data);

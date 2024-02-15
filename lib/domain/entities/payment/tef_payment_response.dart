@@ -9,4 +9,11 @@ class TEFPaymentResponseEntity extends TEFResponseEntity {
     required super.message,
     this.receipt,
   });
+
+  bool get doneWithPaymentSuccess => receipt?.authorization != null;
+
+  bool get doneWithPaymentError =>
+      ((type == TefResponseType.finish || type == TefResponseType.done) &&
+          message.toLowerCase().contains('cancelada')) ||
+      (receipt != null && receipt!.authorization == null);
 }

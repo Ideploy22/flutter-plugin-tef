@@ -71,12 +71,7 @@ class TefController {
     );
 
     late final TEFPaymentResponseEntity response;
-    if (type != TefResponseType.finish) {
-      response = TEFPaymentResponseEntity(
-        type: type,
-        message: json['message'] ?? '',
-      );
-    } else {
+    if (type == TefResponseType.finish) {
       final EitherOf<Failure, PaymentResponseEntity> paymentReceiptResponse =
           _getPaymentResponseFromStringUseCase.call(json['message']);
       paymentReceiptResponse.get((Failure reject) => null,
@@ -87,6 +82,11 @@ class TefController {
           receipt: receipt,
         );
       });
+    } else {
+      response = TEFPaymentResponseEntity(
+        type: type,
+        message: json['message'] ?? '',
+      );
     }
 
     _paymentStreamController.add(response);

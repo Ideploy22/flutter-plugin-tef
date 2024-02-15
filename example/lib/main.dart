@@ -135,9 +135,9 @@ class _MyAppState extends State<MyApp> {
   Future<void> _onPressed() async {
     await _tefPlugin.configure(
       ConfigureTEFEntity(
-        applicationName: 'App test',
+        applicationName: 'honest_pdv',
         applicationVersion: '101',
-        document: '49.984.096/0002-69',
+        document: '49.984.096/0001-69',
         pinPadText: 'Bistro TEF',
       ),
     );
@@ -157,7 +157,7 @@ class _MyAppState extends State<MyApp> {
   void _payWithCredit() {
     _tefPlugin.pay(
       PaymentDataEntity.credit(
-        valueCents: 10,
+        valueCents: 475,
         operationType: OperationType.inCash,
       ),
     );

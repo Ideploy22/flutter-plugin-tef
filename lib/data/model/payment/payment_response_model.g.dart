@@ -8,19 +8,19 @@ part of 'payment_response_model.dart';
 
 PaymentResponseModel _$PaymentResponseModelFromJson(Map json) =>
     PaymentResponseModel(
-      administratorModel: json['administradora'] as String,
-      authorizationModel: json['autorizacao'] as String,
-      cnpjRedeModel: json['cnpjRede'] as String,
-      dateModel: json['data'] as String,
+      administratorModel: json['administradora'] as String?,
+      authorizationModel: json['autorizacao'] as String?,
+      cnpjRedeModel: json['cnpjRede'] as String?,
+      dateModel: json['data'] as String?,
       messageModel: json['mensagem'] as String,
-      nsuModel: json['nsu'] as String,
-      nsuRedeModel: json['nsuRede'] as String,
-      cardNumberModel: json['numeroCartao'] as String,
-      paymentTypeModel: json['pagamento'] as String,
-      redeModel: json['rede'] as String,
-      cardTypeModel: json['tipoCartao'] as String,
-      valueModel: json['valor'] as String,
-      dueDateModel: json['vencimento'] as String,
+      nsuModel: json['nsu'] as String?,
+      nsuRedeModel: json['nsuRede'] as String?,
+      cardNumberModel: json['numeroCartao'] as String?,
+      paymentTypeModel: json['pagamento'] as String?,
+      redeModel: json['rede'] as String?,
+      cardTypeModel: json['tipoCartao'] as String?,
+      valueModel: json['valor'] as String?,
+      dueDateModel: json['vencimento'] as String?,
     );
 
 Map<String, dynamic> _$PaymentResponseModelToJson(

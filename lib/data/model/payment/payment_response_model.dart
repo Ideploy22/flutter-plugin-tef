@@ -7,58 +7,58 @@ part 'payment_response_model.mapper.dart';
 @JsonSerializable(anyMap: true)
 class PaymentResponseModel extends PaymentResponseEntity {
   @JsonKey(name: 'administradora')
-  final String administratorModel;
+  final String? administratorModel;
 
   @JsonKey(name: 'autorizacao')
-  final String authorizationModel;
+  final String? authorizationModel;
 
   @JsonKey(name: 'cnpjRede')
-  final String cnpjRedeModel;
+  final String? cnpjRedeModel;
 
   @JsonKey(name: 'data')
-  final String dateModel;
+  final String? dateModel;
 
   @JsonKey(name: 'mensagem')
   final String messageModel;
 
   @JsonKey(name: 'nsu')
-  final String nsuModel;
+  final String? nsuModel;
 
   @JsonKey(name: 'nsuRede')
-  final String nsuRedeModel;
+  final String? nsuRedeModel;
 
   @JsonKey(name: 'numeroCartao')
-  final String cardNumberModel;
+  final String? cardNumberModel;
 
   @JsonKey(name: 'pagamento')
-  final String paymentTypeModel;
+  final String? paymentTypeModel;
 
   @JsonKey(name: 'rede')
-  final String redeModel;
+  final String? redeModel;
 
   @JsonKey(name: 'tipoCartao')
-  final String cardTypeModel;
+  final String? cardTypeModel;
 
   @JsonKey(name: 'valor')
-  final String valueModel;
+  final String? valueModel;
 
   @JsonKey(name: 'vencimento')
-  final String dueDateModel;
+  final String? dueDateModel;
 
   PaymentResponseModel({
-    required this.administratorModel,
-    required this.authorizationModel,
-    required this.cnpjRedeModel,
-    required this.dateModel,
+    this.administratorModel,
+    this.authorizationModel,
+    this.cnpjRedeModel,
+    this.dateModel,
     required this.messageModel,
-    required this.nsuModel,
-    required this.nsuRedeModel,
-    required this.cardNumberModel,
-    required this.paymentTypeModel,
-    required this.redeModel,
-    required this.cardTypeModel,
-    required this.valueModel,
-    required this.dueDateModel,
+    this.nsuModel,
+    this.nsuRedeModel,
+    this.cardNumberModel,
+    this.paymentTypeModel,
+    this.redeModel,
+    this.cardTypeModel,
+    this.valueModel,
+    this.dueDateModel,
   }) : super(
           administrator: administratorModel,
           authorization: authorizationModel,
